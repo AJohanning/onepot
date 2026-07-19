@@ -162,10 +162,11 @@
   .empty{text-align:center;color:var(--dim);font-size:14px;padding:40px 0}
 
   /* ---------- INSTALL-BOKS ---------- */
-  .install{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
+  .install{display:none;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
     z-index:60;background:var(--card);border:1.5px solid var(--line2);border-radius:16px;
     padding:16px 16px 14px;box-shadow:0 12px 40px rgba(0,0,0,.5);
     transform:translateY(140%);transition:transform .35s cubic-bezier(.4,0,.2,1);max-width:596px;margin:0 auto}
+  .install.eligible{display:block}
   .install.show{transform:translateY(0)}
   .install .x{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;
     background:var(--bg);color:var(--dim);font-size:16px;font-weight:800;

@@ -760,7 +760,7 @@ function openRecipeFromPlan(i){
 
 // Install-boks: vis på iOS og Android, ikke når appen kører fra hjemmeskærm
 function dismissInstall(){
-  document.getElementById('install').classList.remove('show');
+  document.getElementById('install').classList.remove('show','eligible');
 }
 function renderInstallContent(){
   const install=document.getElementById('install');
@@ -798,6 +798,7 @@ function renderInstallContent(){
   // Vis kun hvis: på iOS eller Android, ikke allerede app, og ikke lukket i denne session
   if((isIOS || isAndroid) && !standalone && !sessionStorage.getItem('hideInstall')){
     renderInstallContent();
+    document.getElementById('install').classList.add('eligible'); // deltag i layout først nu
     setTimeout(()=>document.getElementById('install').classList.add('show'), 1200);
   }
 })();
@@ -865,7 +866,7 @@ function openSettings(){ document.getElementById('settingsBackdrop').classList.a
 function closeSettings(){ document.getElementById('settingsBackdrop').classList.remove('show'); }
 
 /* ---------- VERSION ---------- */
-const APP_VERSION='v2.0';
+const APP_VERSION='v2.0.1';
 document.getElementById('setVerBtn').textContent=APP_VERSION+' ✓';
 let updateAvailable=false;
 async function checkVersion(){
