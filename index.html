@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OnePot">
+<meta name="theme-color" content="#141210">
+<title>OnePot</title>
+
+<link rel="icon" type="image/png" href="/onepot/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/png" href="/onepot/favicon-192x192.png" sizes="192x192" />
+<link rel="icon" type="image/png" href="/onepot/favicon-512x512.png" sizes="512x512" />
+<link rel="icon" type="image/svg+xml" href="/onepot/favicon.svg" />
+<link rel="shortcut icon" href="/onepot/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/onepot/apple-touch-icon.png" />
+<link rel="manifest" href="/onepot/site.webmanifest" />
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap" id="homePage">
+  <header>
+    <div class="htop">
+      <div class="brand">ONE&nbsp;P<span class="o">O</span>T</div>
+      <button class="gearBtn" id="gearBtn" onclick="openSettings()">⚙</button>
+    </div>
+    <div class="controls">
+      <button class="rand" onclick="randomize()" data-i18n="rand_btn"></button>
+    </div>
+    <div class="filters" id="filters"></div>
+  </header>
+  <div class="list" id="list"></div>
+  <div class="empty hidden" id="empty" data-i18n="empty_no_results"></div>
+</div>
+
+<div class="detail" id="detail">
+  <div class="dwrap">
+    <div class="dbar">
+      <button class="back" onclick="closeDetail()" data-i18n="detail_back_all"></button>
+      <button class="dice" onclick="randomize()" data-i18n="detail_new"></button>
+    </div>
+    <div id="dcontent"></div>
+  </div>
+</div>
+
+<div class="plan" id="plan">
+  <div class="pwrap">
+    <div class="pbar">
+      <button class="back" id="planBack" onclick="planBack()" data-i18n="plan_back_default"></button>
+    </div>
+    <div id="pcontent"></div>
+  </div>
+</div>
+
+<div class="wrap" id="savedPage" style="display:none">
+  <header>
+    <div class="htop">
+      <div class="brand" data-i18n="saved_brand"></div>
+      <button class="gearBtn" onclick="openSettings()">⚙</button>
+    </div>
+    <div class="controls">
+      <button class="plan-btn" onclick="openPlan()" data-i18n="plan_btn"></button>
+    </div>
+  </header>
+  <div id="savedList"></div>
+</div>
+
+<div id="printArea"></div>
+
+<div class="settings-backdrop" id="settingsBackdrop" onclick="if(event.target===this) closeSettings()">
+  <div class="settings-modal">
+    <button class="settings-x" onclick="closeSettings()">✕</button>
+    <div class="settings-title" data-i18n="settings_title"></div>
+    <div class="settings-desc" data-i18n-html="settings_desc"></div>
+    <div class="settings-row">
+      <span class="settings-label" data-i18n="settings_version_label"></span>
+      <button class="settings-ver" id="setVerBtn" onclick="forceUpdate(this)">v2.0 ✓</button>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label" data-i18n="settings_theme_label"></span>
+      <div class="seg">
+        <button class="seg-btn" id="segDark" onclick="setTheme('dark')" data-i18n="theme_dark"></button>
+        <button class="seg-btn" id="segLight" onclick="setTheme('light')" data-i18n="theme_light"></button>
+      </div>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label" data-i18n="settings_lang_label"></span>
+      <div class="seg">
+        <button class="seg-btn" id="segDa" onclick="setLang('da')">Dansk</button>
+        <button class="seg-btn" id="segEn" onclick="setLang('en')">English</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<nav class="nav" id="nav">
+  <button id="navHome" class="on" onclick="showPage('home')"><span class="nic">🍝</span><span data-i18n="nav_recipes"></span></button>
+  <button id="navSaved" onclick="showPage('saved')"><span class="nic">📋</span><span data-i18n="nav_plans"></span></button>
+</nav>
+
+<div class="install" id="install">
+  <button class="x" onclick="dismissInstall()" data-i18n-aria="install_close_aria">✕</button>
+  <div id="installContent"></div>
+</div>
+
+<script src="i18n.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
