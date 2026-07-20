@@ -79,6 +79,14 @@
 
   /* ---------- LIST ---------- */
   .list{margin-top:8px}
+  .fridge-desc{font-size:13px;color:var(--dim);line-height:1.4;margin:10px 0 14px}
+  .fridgeSeg{width:100%}
+  .fridgeSeg .seg-btn{flex:1;text-align:center}
+  .fridge-count{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--dim);margin:14px 0 2px}
+  .matchbdg{position:relative;font-weight:800;font-size:11px;color:var(--accent);white-space:nowrap;
+    padding:3px 8px;border-radius:999px;border:1.5px solid var(--accent);overflow:hidden}
+  .matchbdg::before{content:"";position:absolute;inset:0;width:var(--pct);background:var(--accent);opacity:.18;z-index:0}
   .card{display:flex;align-items:center;gap:14px;width:100%;text-align:left;
     padding:16px 4px;border-bottom:1px solid var(--line);transition:opacity .12s}
   .card:active{opacity:.6}

@@ -82,6 +82,21 @@
   <div id="savedList"></div>
 </div>
 
+<div class="wrap" id="fridgePage" style="display:none">
+  <header>
+    <div class="htop">
+      <div class="brand" data-i18n="fridge_title" style="font-size:26px"></div>
+      <button class="gearBtn" onclick="openSettings()">⚙</button>
+    </div>
+    <p class="fridge-desc" data-i18n="fridge_desc"></p>
+    <div class="seg fridgeSeg">
+      <button class="seg-btn on" id="fvIng" onclick="setFridgeView('ing')" data-i18n="fridge_view_ing"></button>
+      <button class="seg-btn" id="fvRes" onclick="setFridgeView('res')" data-i18n="fridge_view_res"></button>
+    </div>
+  </header>
+  <div id="fridgeContent"></div>
+</div>
+
 <div id="printArea"></div>
 
 <div class="settings-backdrop" id="settingsBackdrop" onclick="if(event.target===this) closeSettings()">
@@ -91,7 +106,7 @@
     <div class="settings-desc" data-i18n-html="settings_desc"></div>
     <div class="settings-row">
       <span class="settings-label" data-i18n="settings_version_label"></span>
-      <button class="settings-ver" id="setVerBtn" onclick="forceUpdate(this)">v2.1.1 ✓</button>
+      <button class="settings-ver" id="setVerBtn" onclick="forceUpdate(this)">v2.1.2 ✓</button>
     </div>
     <div class="settings-row">
       <span class="settings-label" data-i18n="settings_theme_label"></span>
@@ -112,6 +127,7 @@
 
 <nav class="nav" id="nav">
   <button id="navHome" class="on" onclick="showPage('home')"><span class="nic">🍝</span><span data-i18n="nav_recipes"></span></button>
+  <button id="navFridge" onclick="showPage('fridge')"><span class="nic">♻️</span><span data-i18n="nav_fridge"></span></button>
   <button id="navSaved" onclick="showPage('saved')"><span class="nic">📋</span><span data-i18n="nav_plans"></span></button>
 </nav>
 

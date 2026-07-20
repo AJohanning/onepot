@@ -335,7 +335,10 @@ function openDetail(i, fromPlan=false){
 }
 function closeDetail(){
   Object.keys(timers).forEach(k=>{clearInterval(timers[k].int);delete timers[k];});
-  const target = detailFromPlan ? 'plan' : (document.getElementById('navSaved').classList.contains('on')?'saved':'home');
+  let target='home';
+  if(detailFromPlan) target='plan';
+  else if(document.getElementById('navSaved').classList.contains('on')) target='saved';
+  else if(document.getElementById('navFridge').classList.contains('on')) target='fridge';
   detailFromPlan=false;
   showView(target, true); // bevar scroll-position på destinationen
 }
@@ -758,6 +761,7 @@ function showView(name, keepScroll=false){
   viewScroll[activeView]=window.scrollY;
   document.getElementById('homePage').style.display = name==='home'?'block':'none';
   document.getElementById('savedPage').style.display = name==='saved'?'block':'none';
+  document.getElementById('fridgePage').style.display = name==='fridge'?'block':'none';
   document.getElementById('plan').classList.toggle('open', name==='plan');
   document.getElementById('detail').classList.toggle('open', name==='detail');
   document.body.classList.toggle('detail-open', name==='detail');
@@ -768,7 +772,9 @@ function showPage(page){
   detailFromPlan=false;
   document.getElementById('navHome').classList.toggle('on',page==='home');
   document.getElementById('navSaved').classList.toggle('on',page==='saved');
+  document.getElementById('navFridge').classList.toggle('on',page==='fridge');
   if(page==='saved') renderSaved();
+  if(page==='fridge') renderFridgePage();
   showView(page);
 }
 // Beregn en gemt plans pris live — samme formel (+20%) som inde i planen
@@ -846,6 +852,123 @@ async function openSavedPlan(id){
 // Åbn opskrift OVENPÅ planen — let at hoppe ind og ud
 function openRecipeFromPlan(i){
   openDetail(i, true); // fromPlan: bruger planens portioner, tilbage -> planen
+}
+
+/* ===================== TØM KØLESKABET ===================== */
+// Samme mønster som tagCanon(): gemt data er ALTID dansk kanonisk, uanset aktivt sprog
+function ingCanon(base){ return lang==='en' ? (ING_EN_TO_DA[base]||base) : base; }
+function ingDisplay(canonBase){ return lang==='en' ? (ING_DA_TO_EN[canonBase]||canonBase) : canonBase; }
+
+let haveIngredients=new Set(JSON.parse(localStorage.getItem('onepot_have_ing')||'[]')); // kanoniske (dansk) baser
+let fridgeSearch='';
+let fridgeView='ing';
+function saveHaveIngredients(){
+  localStorage.setItem('onepot_have_ing', JSON.stringify([...haveIngredients]));
+}
+// Master-liste: alle unikke grundingredienser (aktivt sprog) + hvilke retter de bruges i
+function buildFridgeMaster(){
+  const map=new Map(); // base -> {display, aisle, uses:Set(recipeIndex)}
+  recipes.forEach((r,i)=>{
+    r.ing.forEach(([nm])=>{
+      if(nm.trim().toLowerCase()===WATER_WORD) return;
+      const base=baseIngredient(nm);
+      let e=map.get(base);
+      if(!e){ e={base,display:base.charAt(0).toUpperCase()+base.slice(1),aisle:aisleFor(nm),uses:new Set()}; map.set(base,e); }
+      e.uses.add(i);
+    });
+  });
+  const order=AISLES.map(a=>a[0]).concat("Andet");
+  const groups={};
+  map.forEach(e=>{ (groups[e.aisle]=groups[e.aisle]||[]).push(e); });
+  const out=[];
+  order.forEach(a=>{
+    if(groups[a]){
+      groups[a].sort((x,y)=>x.display.localeCompare(y.display,SORT_LOCALE));
+      out.push([a,groups[a]]);
+    }
+  });
+  return out;
+}
+function toggleHaveIngredient(base){
+  const c=ingCanon(base);
+  haveIngredients.has(c)?haveIngredients.delete(c):haveIngredients.add(c);
+  saveHaveIngredients();
+}
+function clearHaveIngredients(){
+  haveIngredients.clear();
+  saveHaveIngredients();
+  renderFridgePage();
+}
+function setFridgeView(v){
+  fridgeView=v;
+  document.getElementById('fvIng').classList.toggle('on',v==='ing');
+  document.getElementById('fvRes').classList.toggle('on',v==='res');
+  renderFridgeContent();
+}
+function renderFridgePage(){
+  setFridgeView(fridgeView);
+}
+function renderFridgeContent(){
+  const el=document.getElementById('fridgeContent');
+  if(fridgeView==='ing'){
+    el.innerHTML=`
+      <div class="fbar" style="margin-top:14px">
+        <input class="fsearch" type="search" placeholder="${T.fridge_search_placeholder}" value="${fridgeSearch}"
+          oninput="fridgeSearch=this.value.toLowerCase();renderFridgeIngList()">
+        <button class="freset" id="fridgeResetBtn" style="display:${haveIngredients.size?'':'none'}" onclick="clearHaveIngredients()" title="${T.fridge_clear_btn}">✕</button>
+      </div>
+      <div class="fridge-count" id="fridgeCountLbl">${tf(T.fridge_have_count,{n:haveIngredients.size})}</div>
+      <ul class="ing fridgeList" id="fridgeListEl"></ul>`;
+    renderFridgeIngList();
+  } else {
+    el.innerHTML=fridgeResultsHTML();
+  }
+}
+// Opdaterer KUN selve ingredienslisten (ikke søgefeltet) — bevarer fokus/cursor ved tastning
+function renderFridgeIngList(){
+  const listEl=document.getElementById('fridgeListEl');
+  if(!listEl) return;
+  const groups=buildFridgeMaster();
+  const q=fridgeSearch;
+  let any=false;
+  const body=groups.map(([aisle,items])=>{
+    const shown=items.filter(e=>!q || e.display.toLowerCase().includes(q));
+    if(!shown.length) return '';
+    any=true;
+    return `<div class="shop-cat">${aisle}</div>
+      ${shown.map(e=>`
+        <li class="ing fridgeIng ${haveIngredients.has(ingCanon(e.base))?'done':''}" onclick="this.classList.toggle('done');toggleHaveIngredient('${e.base.replace(/'/g,"\\'")}');refreshFridgeCount()">
+          <span class="box"></span><span class="nm">${e.display}</span>
+        </li>`).join('')}`;
+  }).join('');
+  listEl.innerHTML = any?body:`<div class="empty">${T.empty_no_results}</div>`;
+}
+// Opdaterer optæller + nulstil-knap uden at rykke ved selve listen/søgefeltet
+function refreshFridgeCount(){
+  const lbl=document.getElementById('fridgeCountLbl');
+  const btn=document.getElementById('fridgeResetBtn');
+  if(lbl) lbl.textContent=tf(T.fridge_have_count,{n:haveIngredients.size});
+  if(btn) btn.style.display = haveIngredients.size?'':'none';
+}
+function fridgeResultsHTML(){
+  if(!haveIngredients.size) return `<div class="saved-empty">${T.fridge_empty_hint}</div>`;
+  const pool=recipes.map((r,i)=>i).filter(i=>matchRecipe(recipes[i]));
+  const scored=pool.map(i=>{
+    const real=recipes[i].ing.filter(([nm])=>nm.trim().toLowerCase()!==WATER_WORD);
+    const haveN=real.filter(([nm])=>haveIngredients.has(ingCanon(baseIngredient(nm)))).length;
+    return {i, have:haveN, total:real.length};
+  }).filter(x=>x.have>0)
+    .sort((a,b)=> (b.have/b.total)-(a.have/a.total) || b.have-a.have);
+  if(!scored.length) return `<div class="saved-empty">${T.fridge_no_match_hint}</div>`;
+  return scored.map(({i,have,total})=>{
+    const r=recipes[i];
+    const pct=Math.round(have/total*100);
+    return `<button class="card" onclick="openDetail(${i})">
+      <span class="n">${pad(i+1)}</span>
+      <span class="mid"><div class="nm">${favs.has(i)?'❤ ':''}${r.name}</div><div class="d">${r.desc}</div></span>
+      <span class="meta"><div class="matchbdg" style="--pct:${pct}%">${tf(T.fridge_match_label,{have,total})}</div><div class="tm">${r.time}</div></span>
+    </button>`;
+  }).join('');
 }
 
 // Install-boks: vis på iOS og Android, ikke når appen kører fra hjemmeskærm
@@ -956,7 +1079,7 @@ function openSettings(){ document.getElementById('settingsBackdrop').classList.a
 function closeSettings(){ document.getElementById('settingsBackdrop').classList.remove('show'); }
 
 /* ---------- VERSION ---------- */
-const APP_VERSION='v2.1.1';
+const APP_VERSION='v2.1.2';
 document.getElementById('setVerBtn').textContent=APP_VERSION+' ✓';
 let updateAvailable=false;
 async function checkVersion(){
