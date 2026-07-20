@@ -20,12 +20,17 @@
    ========================================================================== */
 
 :root {
-    ...
-}
-    --bg:#141210; --card:#1e1a16; --line:#332c24; --line2:#443a2f;
-    --ink:#f4efe6; --dim:#9a8d7a; --accent:#ff4a1c;
+    --bg:#141210;
+    --card:#1e1a16;
+    --line:#332c24;
+    --line2:#443a2f;
+
+    --ink:#f4efe6;
+    --dim:#9a8d7a;
+    --accent:#ff4a1c;
+
     --sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif;
-  }
+}
   body.light{
     --bg:#f7f2ec; --card:#ffffff; --line:#e8e0d5; --line2:#d9cfc2;
     --ink:#221b15; --dim:#8f8172; --accent:#e23c10;
