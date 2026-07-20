@@ -1,0 +1,9 @@
+# OnePot robots.txt
+
+User-agent: *
+
+# Allow all public content
+Allow: /
+
+# Sitemap location
+Sitemap: https://onepot.dk/sitemap.xml
