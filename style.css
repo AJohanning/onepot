@@ -371,25 +371,27 @@
       line-height:1.5;white-space:pre-wrap;padding:10mm}
   }
 /* ==========================================================================
-   SEO content section
+   SEO content
    ========================================================================== */
 
 .seo-content {
-    max-width: 700px;
-    margin: 60px auto 120px;
+    max-width: 650px;
+    margin: 40px auto 120px;
     padding: 0 20px;
-    color: var(--dim);
-    font-size: 15px;
-    line-height: 1.7;
     text-align: center;
+    opacity: 0.75;
 }
 
 .seo-content h1 {
+    font-size: 18px;
+    font-weight: 600;
     color: var(--ink);
-    font-size: 24px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .seo-content p {
-    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--dim);
+    margin: 0;
 }
