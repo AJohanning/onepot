@@ -72,7 +72,7 @@
     font-size:14px;letter-spacing:.04em;text-transform:uppercase;padding:14px 16px;border-radius:12px;
     display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .1s}
   .rand:active{transform:scale(.97)}
-  .filters{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+  .filters{margin-top:12px}
   .fbtn{font-weight:800;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
     padding:8px 13px;border-radius:999px;border:1.5px solid var(--line2);color:var(--dim);transition:all .12s}
   .fbtn.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -322,7 +322,9 @@
   .plan-recipe .arr{color:var(--accent);font-weight:800;font-size:18px}
   /* ---------- FILTER-PANEL ---------- */
   .fbar{display:flex;gap:8px;margin-top:12px}
-  .fsearch{flex:1;background:var(--card);border:1.5px solid var(--line2);border-radius:10px;
+  .freset{flex-shrink:0;width:38px;background:var(--card);border:1.5px solid var(--line2);
+    border-radius:10px;color:var(--dim);font-size:14px;font-weight:800}
+  .fsearch{flex:1;min-width:0;background:var(--card);border:1.5px solid var(--line2);border-radius:10px;
     color:var(--ink);font-family:inherit;font-size:14px;font-weight:600;padding:11px 13px;outline:none}
   .fsearch::placeholder{color:var(--dim)}
   .fbtn2{background:var(--card);border:1.5px solid var(--line2);border-radius:10px;color:var(--ink);
@@ -343,6 +345,9 @@
     color:var(--ink);background:var(--bg);transition:all .12s}
   .fchip.off{color:var(--dim);text-decoration:line-through;opacity:.55}
   .fchip.fav.on{background:var(--accent);color:#140b06;border-color:var(--accent);text-decoration:none;opacity:1}
+  .fchip.req.on{background:var(--accent);color:#140b06;border-color:var(--accent);text-decoration:none;opacity:1}
+  .sortSeg{width:100%;flex-wrap:wrap;margin-bottom:4px}
+  .sortSeg .seg-btn{flex:1;text-align:center;padding:9px 4px;font-size:10.5px;letter-spacing:.01em}
   .frow{display:flex;gap:8px;margin-top:14px}
   .frow button{flex:1;font-weight:800;font-size:11.5px;letter-spacing:.03em;text-transform:uppercase;
     padding:11px;border-radius:10px;border:1.5px solid var(--line2);color:var(--ink);background:transparent}

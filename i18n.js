@@ -28,6 +28,13 @@ da: {
   favorites_only: "❤ Kun favoritter",
   select_all: "Vælg alle",
   rand_btn: "🎲 Tilfældig ret",
+  sort_group: "Sortér",
+  sort_default: "Nr.",
+  sort_time: "Tid",
+  sort_price: "Pris",
+  sort_alpha: "A-Å",
+  shortcuts_group: "Genveje",
+  hide_recent_btn: "🕓 Ikke brugt for nylig",
 
   // Opskrift-detalje
   stat_persons: "Antal personer",
@@ -133,6 +140,13 @@ en: {
   favorites_only: "❤ Favorites only",
   select_all: "Select all",
   rand_btn: "🎲 Random recipe",
+  sort_group: "Sort",
+  sort_default: "No.",
+  sort_time: "Time",
+  sort_price: "Price",
+  sort_alpha: "A-Z",
+  shortcuts_group: "Shortcuts",
+  hide_recent_btn: "🕓 Not used recently",
 
   stat_persons: "Numbers of person",
   stat_time: "Time",

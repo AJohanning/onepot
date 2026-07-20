@@ -20,9 +20,12 @@ const SORT_LOCALE = lang==='en' ? 'en' : 'da';
 // Tag-kanonisering: fravalgte tags gemmes ALTID som dansk kanonisk navn,
 // så gemte filtre er bagudkompatible og overlever sprogskifte.
 const TAG_EN_TO_DA = {"Meat":"Kød","Fish":"Fisk","Veg":"Veg","Quick":"Hurtig","Protein":"Protein",
-  "Kid-friendly":"Børnevenlig","Creamy":"Cremet","Light":"Let","Spicy":"Stærk",
+  "Kid-friendly":"Børnevenlig","Creamy":"Cremet","Light":"Let","Spicy":"Stærk","Vegan":"Vegansk","Few ingredients":"Få ingredienser",
   "With garlic":"Med hvidløg","With coriander":"Med koriander","With chili":"Med chili","With mushroom":"Med svampe"};
 function tagCanon(t){ return lang==='en' ? (TAG_EN_TO_DA[t]||t) : t; }
+// Egenskab-gruppens tags (tilvælg/OG) — resten (Kategori+Ingredienser) er fravælg som hidtil
+const TRAIT_TAGS = new Set(TAG_GROUPS[1][1]);
+const FEW_ING_MAX = 8; // "Få ingredienser": højst dette antal (vand tæller ikke) — datasættets min. er 5, så ≤4 ville aldrig matche
 
 // Lokaltal: komma (da) vs. punktum (en)
 function fmtNum(n){
@@ -48,6 +51,8 @@ function recipeTags(r){
   const t=new Set([r.cat]);
   if(parseInt(r.time)<=QUICK_MAX) t.add(lang==='en'?'Quick':'Hurtig');
   if(r.cat!=='Veg') t.add('Protein');
+  const realIng=r.ing.filter(x=>x[0].trim().toLowerCase()!==WATER_WORD);
+  if(realIng.length<=FEW_ING_MAX) t.add(lang==='en'?'Few ingredients':'Få ingredienser');
   const ing=r.ing.map(x=>x[0].toLowerCase()).join(' ');
   AUTO_TAG_KEYWORDS.forEach(([kw,tag])=>{ if(ing.includes(kw)) t.add(tag); });
   (MANUAL_TAGS[i]||[]).forEach(x=>t.add(x));
@@ -68,23 +73,84 @@ function migrateFavs(){
 
 // Filter-state (gemmes)
 let excludedTags=new Set(JSON.parse(localStorage.getItem('onepot_excluded')||'[]'));
+let requiredTraits=new Set(JSON.parse(localStorage.getItem('onepot_required')||'[]')); // Egenskaber: tilvælg/OG
 let favs=migrateFavs();
 let onlyFavs=localStorage.getItem('onepot_onlyfavs')==='1';
+let hideRecent=localStorage.getItem('onepot_hiderecent')==='1'; // skjul retter brugt i ugeplan for <7 dage
+let sortMode=localStorage.getItem('onepot_sort')||'default'; // default|time|price|alpha
 let searchText='';
 function saveFilters(){
   localStorage.setItem('onepot_excluded',JSON.stringify([...excludedTags]));
+  localStorage.setItem('onepot_required',JSON.stringify([...requiredTraits]));
   localStorage.setItem('onepot_favs',JSON.stringify([...favs]));
   localStorage.setItem('onepot_onlyfavs',onlyFavs?'1':'0');
+  localStorage.setItem('onepot_hiderecent',hideRecent?'1':'0');
 }
-// Central match: søgning + fravalgte tags + favoritter
+// Synkron hjælper: opskrift-indekser brugt i en gemt ugeplan inden for de sidste N dage
+const RECENT_DAYS=7;
+function recentlyUsedIndices(days){
+  let plans=[]; try{ plans=JSON.parse(localStorage.getItem('onepot_plans')||'[]'); }catch(e){}
+  const cutoff=Date.now()-days*86400000;
+  const set=new Set();
+  plans.forEach(p=>{ if(p.id>=cutoff) (p.recipes||[]).forEach(i=>set.add(i)); });
+  return set;
+}
+// Central match: søgning + fravalgte tags (Kategori/Ingredienser) + krævede egenskaber (OG) + favoritter + nylig-filter
 function matchRecipe(r){
-  if(onlyFavs && !favs.has(recipes.indexOf(r))) return false;
+  const idx=recipes.indexOf(r);
+  if(onlyFavs && !favs.has(idx)) return false;
+  if(hideRecent && recentlyUsedIndices(RECENT_DAYS).has(idx)) return false;
   if(searchText){
     const hay=(r.name+' '+r.ing.map(x=>x[0]).join(' ')).toLowerCase();
     if(!hay.includes(searchText)) return false;
   }
-  for(const t of recipeTags(r)) if(excludedTags.has(tagCanon(t))) return false;
+  const tags=recipeTags(r);
+  for(const t of tags) if(!TRAIT_TAGS.has(t) && excludedTags.has(tagCanon(t))) return false;
+  for(const req of requiredTraits) if(![...tags].some(t=>tagCanon(t)===req)) return false;
   return true;
+}
+// Estimér ca.-pris for ÉN opskrift (til "Billigst"-sortering) — genbruger prismotoren uden sammenlægning
+function estimateRecipePrice(r){
+  let total=0;
+  r.ing.forEach(([nm,val,unit])=>{
+    if(nm.trim().toLowerCase()===WATER_WORD) return;
+    const base=baseIngredient(nm);
+    const row=PRICES[base];
+    if(!row) { total+=8; return; }
+    const q=val!==""?parseFloat(val):null;
+    const u=unit||'stk';
+    if(q===null){ if(row.pack) total+=row.pack; }
+    else if(row[u]!==undefined) total+=q*row[u];
+    else if(row.pack!==undefined) total+=row.pack;
+    else total+=8;
+  });
+  return total;
+}
+// Sortér en liste af opskrift-indekser efter aktivt sortMode (nummerorden er default = uændret)
+function sortIndices(idxList){
+  const arr=[...idxList];
+  if(sortMode==='time') arr.sort((a,b)=>parseInt(recipes[a].time)-parseInt(recipes[b].time));
+  else if(sortMode==='price') arr.sort((a,b)=>estimateRecipePrice(recipes[a])-estimateRecipePrice(recipes[b]));
+  else if(sortMode==='alpha') arr.sort((a,b)=>recipes[a].name.localeCompare(recipes[b].name,SORT_LOCALE));
+  return arr;
+}
+function setSortMode(m){
+  sortMode=m;
+  localStorage.setItem('onepot_sort',m);
+  document.querySelectorAll('.sortSeg .seg-btn').forEach(b=>b.classList.toggle('on', b.dataset.mode===m));
+  refreshFilterChrome();
+  renderList();
+  const pl=document.getElementById('planList'); if(pl) renderPlanList();
+}
+// Opdaterer badge-tal, Filtre-knappens farve og synligheden af nulstil-knappen uden at lukke panelet
+function refreshFilterChrome(){
+  const nActive=excludedTags.size+requiredTraits.size+(onlyFavs?1:0)+(hideRecent?1:0)+(sortMode!=='default'?1:0);
+  document.querySelectorAll('.fbar').forEach(bar=>{
+    const btn=bar.querySelector('.fbtn2'), bdg=bar.querySelector('.bdg'), reset=bar.querySelector('.freset');
+    if(btn) btn.classList.toggle('active', nActive>0);
+    if(bdg) bdg.textContent=nActive;
+    if(reset) reset.style.display = nActive>0 ? '' : 'none';
+  });
 }
 
 let current=null, mult=1, lastRandom=-1;
@@ -93,34 +159,48 @@ const timers={};
 // Fælles filter-UI (forside + ugeplan). Callback angives ved NAVN (global funktion).
 function renderFilterUI(containerId, cbName, keepOpen=false){
   const el=document.getElementById(containerId);
-  const nExcl=excludedTags.size+(onlyFavs?1:0);
+  const nActive=excludedTags.size+requiredTraits.size+(onlyFavs?1:0)+(hideRecent?1:0)+(sortMode!=='default'?1:0);
   el.innerHTML=`
     <div class="fbar">
       <input class="fsearch" type="search" placeholder="${T.search_placeholder}" value="${searchText}"
         oninput="searchText=this.value.toLowerCase(); window['${cbName}']()">
-      <button class="fbtn2 ${nExcl?'active':''}" onclick="this.parentElement.nextElementSibling.classList.toggle('show')">
-        ${T.filters_btn} <span class="bdg">${nExcl}</span>
+      <button class="fbtn2 ${nActive?'active':''}" onclick="this.parentElement.nextElementSibling.classList.toggle('show')">
+        ${T.filters_btn} <span class="bdg">${nActive}</span>
       </button>
+      <button class="freset" style="display:${nActive?'':'none'}" onclick="resetFilters('${containerId}','${cbName}')" title="${T.select_all}">✕</button>
     </div>
     <div class="fpanel ${keepOpen?'show':''}">
-      <div class="fgrp">${T.favorites_group}</div>
+      <div class="fgrp">${T.sort_group}</div>
+      <div class="seg sortSeg">
+        <button class="seg-btn ${sortMode==='default'?'on':''}" data-mode="default" onclick="setSortMode('default')">${T.sort_default}</button>
+        <button class="seg-btn ${sortMode==='time'?'on':''}" data-mode="time" onclick="setSortMode('time')">${T.sort_time}</button>
+        <button class="seg-btn ${sortMode==='price'?'on':''}" data-mode="price" onclick="setSortMode('price')">${T.sort_price}</button>
+        <button class="seg-btn ${sortMode==='alpha'?'on':''}" data-mode="alpha" onclick="setSortMode('alpha')">${T.sort_alpha}</button>
+      </div>
+      <div class="fgrp">${T.shortcuts_group}</div>
       <div class="fchips">
         <button class="fchip fav ${onlyFavs?'on':''}" onclick="toggleOnlyFavs('${containerId}','${cbName}')">${T.favorites_only} (${favs.size})</button>
+        <button class="fchip fav ${hideRecent?'on':''}" onclick="toggleHideRecent('${containerId}','${cbName}')">${T.hide_recent_btn}</button>
       </div>
-      ${TAG_GROUPS.map(([g,tags])=>`
+      ${TAG_GROUPS.map(([g,tags],gi)=>`
         <div class="fgrp">${g}</div>
         <div class="fchips">
-          ${tags.map(t=>`
-            <button class="fchip ${excludedTags.has(tagCanon(t))?'off':''}" onclick="toggleTag('${t}','${containerId}','${cbName}')">${t}</button>`).join('')}
+          ${tags.map(t=>{
+            const isTrait=gi===1;
+            const on=isTrait ? requiredTraits.has(tagCanon(t)) : !excludedTags.has(tagCanon(t));
+            const cls=isTrait ? `fchip req ${on?'on':''}` : `fchip ${on?'':'off'}`;
+            return `<button class="${cls}" onclick="toggleTag('${t}','${containerId}','${cbName}')">${t}</button>`;
+          }).join('')}
         </div>`).join('')}
-      <div class="frow">
-        <button onclick="resetFilters('${containerId}','${cbName}')">${T.select_all}</button>
-      </div>
     </div>`;
 }
 function toggleTag(t,cid,cbName){
   const c=tagCanon(t);
-  excludedTags.has(c)?excludedTags.delete(c):excludedTags.add(c);
+  if(TRAIT_TAGS.has(t)){
+    requiredTraits.has(c)?requiredTraits.delete(c):requiredTraits.add(c);
+  }else{
+    excludedTags.has(c)?excludedTags.delete(c):excludedTags.add(c);
+  }
   saveFilters();
   renderFilterUI(cid,cbName,true); // panel forbliver åbent
   window[cbName]();
@@ -130,8 +210,15 @@ function toggleOnlyFavs(cid,cbName){
   renderFilterUI(cid,cbName,true);
   window[cbName]();
 }
+function toggleHideRecent(cid,cbName){
+  hideRecent=!hideRecent; saveFilters();
+  renderFilterUI(cid,cbName,true);
+  window[cbName]();
+}
 function resetFilters(cid,cbName){
-  excludedTags.clear(); onlyFavs=false; saveFilters();
+  excludedTags.clear(); requiredTraits.clear(); onlyFavs=false; hideRecent=false;
+  sortMode='default'; localStorage.setItem('onepot_sort','default');
+  saveFilters();
   renderFilterUI(cid,cbName,true);
   window[cbName]();
 }
@@ -148,9 +235,11 @@ renderFilterUI('filters','renderList');
 const listEl=document.getElementById('list'), emptyEl=document.getElementById('empty');
 function renderList(){
   listEl.innerHTML='';
-  const items=recipes.map((r,i)=>({r,i})).filter(x=>matchRecipe(x.r));
-  emptyEl.classList.toggle('hidden',items.length>0);
-  items.forEach(({r,i})=>{
+  const matched=recipes.map((r,i)=>i).filter(i=>matchRecipe(recipes[i]));
+  const order=sortIndices(matched);
+  emptyEl.classList.toggle('hidden',order.length>0);
+  order.forEach(i=>{
+    const r=recipes[i];
     const c=document.createElement('button');
     c.className='card';
     c.onclick=()=>openDetail(i);
@@ -396,12 +485,13 @@ function onSlider(v){
 }
 function renderPlanList(){
   const list=document.getElementById('planList');
-  const items=recipes.map((r,i)=>({r,i})).filter(x=>matchRecipe(x.r));
-  list.innerHTML=items.map(({r,i})=>`
+  const matched=recipes.map((r,i)=>i).filter(i=>matchRecipe(recipes[i]));
+  const order=sortIndices(matched);
+  list.innerHTML=order.map(i=>{ const r=recipes[i]; return `
     <button class="pcard ${planSel.has(i)?'on':''}" data-idx="${i}" onclick="togglePlan(${i})">
       <span class="pcheck"></span>
       <span class="pmid"><div class="pnm">${r.name}</div><div class="pd">${r.cat} · ${r.time}</div></span>
-    </button>`).join('') || `<div class="empty" style="padding:30px 0">${T.empty_no_results}</div>`;
+    </button>`; }).join('') || `<div class="empty" style="padding:30px 0">${T.empty_no_results}</div>`;
 }
 function refreshPlanFoot(){
   const cnt=document.getElementById('selCnt'); if(cnt)cnt.textContent=planSel.size;
@@ -866,7 +956,7 @@ function openSettings(){ document.getElementById('settingsBackdrop').classList.a
 function closeSettings(){ document.getElementById('settingsBackdrop').classList.remove('show'); }
 
 /* ---------- VERSION ---------- */
-const APP_VERSION='v2.0.1';
+const APP_VERSION='v2.1.1';
 document.getElementById('setVerBtn').textContent=APP_VERSION+' ✓';
 let updateAvailable=false;
 async function checkVersion(){
