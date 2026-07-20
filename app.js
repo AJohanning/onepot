@@ -1,5 +1,7 @@
 /* ===================== SPROG-OPLØSNING ===================== */
 let lang = localStorage.getItem('onepot_lang') || 'da';
+
+document.documentElement.lang = lang;
 const T = STR[lang];
 const recipes = lang==='en' ? RECIPES_EN : RECIPES_DA;
 const AISLES = lang==='en' ? AISLES_EN : AISLES_DA;
@@ -1070,7 +1072,11 @@ function applyLangSegUI(){
 applyLangSegUI();
 function setLang(l){
   if(l===lang) return;
+
   localStorage.setItem('onepot_lang', l);
+
+  document.documentElement.lang = l;
+
   location.reload();
 }
 
