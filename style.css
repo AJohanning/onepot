@@ -1,36 +1,8 @@
-/* ==========================================================================
-   Accessibility utilities
-   ========================================================================== */
-
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0,0,0,0);
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
-}
-
-/* ==========================================================================
-   Theme variables
-   ========================================================================== */
-
-:root {
-    --bg:#141210;
-    --card:#1e1a16;
-    --line:#332c24;
-    --line2:#443a2f;
-
-    --ink:#f4efe6;
-    --dim:#9a8d7a;
-    --accent:#ff4a1c;
-
+  :root{
+    --bg:#141210; --card:#1e1a16; --line:#332c24; --line2:#443a2f;
+    --ink:#f4efe6; --dim:#9a8d7a; --accent:#ff4a1c;
     --sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif;
-}
+  }
   body.light{
     --bg:#f7f2ec; --card:#ffffff; --line:#e8e0d5; --line2:#d9cfc2;
     --ink:#221b15; --dim:#8f8172; --accent:#e23c10;
