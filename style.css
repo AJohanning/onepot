@@ -370,3 +370,26 @@
       font-family:-apple-system,Helvetica,Arial,sans-serif;font-size:12pt;
       line-height:1.5;white-space:pre-wrap;padding:10mm}
   }
+/* ==========================================================================
+   SEO content section
+   ========================================================================== */
+
+.seo-content {
+    max-width: 700px;
+    margin: 60px auto 120px;
+    padding: 0 20px;
+    color: var(--dim);
+    font-size: 15px;
+    line-height: 1.7;
+    text-align: center;
+}
+
+.seo-content h1 {
+    color: var(--ink);
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.seo-content p {
+    margin-bottom: 16px;
+}
