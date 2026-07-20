@@ -1,38 +1,96 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="OnePot">
-<meta name="theme-color" content="#141210">
-<title>OnePot</title>
+  <!-- ==========================================================================
+       Basic document metadata
+       ========================================================================== -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="robots" content="index,follow">
 
-<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-<link rel="icon" type="image/png" href="/favicon-192x192.png" sizes="192x192" />
-<link rel="icon" type="image/png" href="/favicon-512x512.png" sizes="512x512" />
-<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<link rel="shortcut icon" href="/favicon.ico" />
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-<link rel="manifest" href="/site.webmanifest" />
-<link rel="stylesheet" href="style.css">
-  
-<meta name="description" content="Nemme opskrifter på OnePot retter med mulighed for madplan og indkøbsliste.">
+  <!-- ==========================================================================
+       Primary SEO
+       ========================================================================== -->
+  <title>OnePot – Gratis opskrifter, madplan og indkøbsliste</title>
 
-<!-- Open Graph tags til social sharing -->
-<meta property="og:title" content="OnePot" />
-<meta property="og:description" content="Nemme opskrifter på OnePot retter med mulighed for madplan og indkøbsliste." />
-<meta property="og:image" content="https://onepot.dk/og-image.JPEG" />
-<meta property="og:url" content="https://onepot.dk" />
-<meta property="og:type" content="website" />
+  <meta
+    name="description"
+    content="OnePot er en gratis app til opskrifter, madplan og indkøbslister. Virker offline, kræver ingen login og gemmer alle data lokalt på din enhed."
+  >
 
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="OnePot - Nemme one pot opskrifter" />
+  <link rel="canonical" href="https://onepot.dk/">
 
-<meta property="og:site_name" content="OnePot" />
-<meta property="og:locale" content="da_DK" />
+  <!-- ==========================================================================
+       Progressive Web App (PWA)
+       ========================================================================== -->
+  <meta name="theme-color" content="#141210">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="OnePot">
+
+  <link rel="manifest" href="/site.webmanifest">
+
+  <!-- ==========================================================================
+       Icons
+       ========================================================================== -->
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512x512.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+  <!-- ==========================================================================
+       Open Graph (Facebook, Discord, LinkedIn, etc.)
+       ========================================================================== -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="OnePot">
+  <meta property="og:locale" content="da_DK">
+
+  <meta property="og:url" content="https://onepot.dk/">
+  <meta property="og:title" content="OnePot – Gratis opskrifter, madplan og indkøbsliste">
+  <meta property="og:description" content="OnePot er en gratis app til opskrifter, madplan og indkøbslister. Virker offline, kræver ingen login og gemmer alle data lokalt på din enhed.">
+
+  <meta property="og:image" content="https://onepot.dk/og-image.JPEG">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="OnePot – Gratis opskrifter, madplan og indkøbsliste">
+
+  <!-- ==========================================================================
+       Twitter / X Card
+       ========================================================================== -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="OnePot – Gratis opskrifter, madplan og indkøbsliste">
+  <meta name="twitter:description" content="OnePot er en gratis app til opskrifter, madplan og indkøbslister. Virker offline, kræver ingen login og gemmer alle data lokalt på din enhed.">
+  <meta name="twitter:image" content="https://onepot.dk/og-image.JPEG">
+  <meta name="twitter:image:alt" content="OnePot – Gratis opskrifter, madplan og indkøbsliste">
+
+  <!-- ==========================================================================
+       Structured Data (Schema.org)
+       Helps search engines understand the website.
+       ========================================================================== -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "OnePot",
+    "url": "https://onepot.dk/",
+    "description": "Gratis app til opskrifter, madplan og indkøbslister.",
+    "applicationCategory": "LifestyleApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "DKK"
+    }
+  }
+  </script>
+
+  <!-- ==========================================================================
+       Stylesheets
+       ========================================================================== -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="wrap" id="homePage">
