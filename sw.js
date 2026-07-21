@@ -1,6 +1,6 @@
 // One Pot – service worker for offline brug
-const CACHE = 'onepot-v2.1.2';
-const ASSETS = ['./', 'index.html', 'style.css', 'data.js', 'i18n.js', 'app.js', 'apple-touch-icon.png'];
+const CACHE = 'onepot-v2.2.0';
+const ASSETS = ['./', 'index.html', 'style.css', 'data.js', 'i18n.js', 'app.js', 'shoppingUtils.js', 'apple-touch-icon.png'];
 
 // Installer: cache alle filer (venter til siden siger 'tag over')
 self.addEventListener('install', e => {
