@@ -81,10 +81,11 @@ function orSplitFor(l) { return l === 'en' ? _OR_SPLIT_EN : _OR_SPLIT_DA; }
 
 const WATER_WORDS = new Set(['vand', 'water']);
 
-// Hvor mange "opskrifts-enheder" der typisk er i ÉN købt pakke, når opskriftens
-// enhed ikke er den samme som købs-enheden (unit). Dette er bevidst grove,
-// dokumenterede tommelfingerregler — fx "et fed hvidløg" findes ikke i butikken,
-// man køber et helt hvidløgshoved (~10 fed).
+// Hvor mange "opskrifts-enheder" der typisk er i ÉN købt pakke, når købs-
+// enheden (priceRow.unit) er "stk" — dvs. et helt, udeleligt køb (glas,
+// flaske, hoved, bundt). Bevidst grove, dokumenterede tommelfingerregler —
+// fx "et fed hvidløg" findes ikke i butikken, man køber et helt
+// hvidløgshoved (~10 fed). Bruges KUN når priceRow.unit === 'stk'.
 const UNIT_YIELD = {
   fed: 10, clove: 10,          // 1 hvidløgshoved ≈ 10 fed/cloves
   'håndf.': 3, handful: 3,     // 1 bundt/potte krydderurt ≈ 3 håndfulde
@@ -93,6 +94,19 @@ const UNIT_YIELD = {
   spsk: 12, tbsp: 12,          // 1 flaske/glas sauce/pesto ≈ 12 spsk
   knsp: 20, pinch: 20,         // 1 glas ≈ 20 knivspidser
   dl: 40,                      // 1 æske bouillonterninger ≈ 40 dl færdig bouillon
+};
+
+// Omtrentlig vægt (gram) for mål- og skeenheder, brugt når købs-enheden er
+// "g" (vejevarer) men opskriften måler i skefulde/håndfulde/dl — fx smør i
+// spsk, spinat i håndfulde, frosne ærter i dl. KUN brugt når priceRow.unit
+// === 'g'; skal ikke forveksles med UNIT_YIELD ovenfor (som er "pr. hel
+// pakke", ikke "pr. gram").
+const WEIGHT_PER_UNIT_G = {
+  spsk: 14, tbsp: 14,           // 1 spsk (fx smør) ≈ 14 g
+  tsk: 5, tsp: 5,               // 1 tsk (fx revet ingefær) ≈ 5 g
+  'håndf.': 30, handful: 30,    // 1 håndfuld bladgrønt ≈ 30 g
+  knsp: 0.5, pinch: 0.5,        // 1 knivspids ≈ 0,5 g
+  dl: 65,                       // 1 dl (fx frosne ærter) ≈ 65 g
 };
 
 const CATEGORY_ORDER = ['produce', 'meat', 'fish', 'dairy', 'pasta', 'canned', 'condiments', 'spices', 'oil', 'dry_goods', 'other'];
@@ -198,6 +212,18 @@ function toNumber(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+// Hvor mange købs-enheder (priceRow.unit) svarer til ÉN opskrifts-enhed?
+// UNIT_YIELD er opgivet som "opskrifts-enheder pr. hele pakke" (fx 10 fed
+// pr. hvidløgshoved), så den vendes om her (1/10 hoved pr. fed). WEIGHT_PER_UNIT_G
+// er allerede "gram pr. skefuld/håndfuld" og bruges direkte. Returnerer null
+// hvis der ingen kendt omregning er.
+function purchaseUnitsPerRecipeUnit(recipeUnit, priceRow) {
+  const ru = (recipeUnit || '').toLowerCase();
+  if (priceRow.unit === 'stk') { const y = UNIT_YIELD[ru]; return y ? 1 / y : null; }
+  if (priceRow.unit === 'g') return WEIGHT_PER_UNIT_G[ru] || null;
+  return null;
+}
+
 // Omregn en mængde fra opskriftens enhed til købs-enheden (priceRow.unit).
 // Returnerer null hvis enhederne ikke kan forliges (kalder falder da tilbage
 // til at antage én hel pakke, ligesom den gamle prislogik i app.js gjorde).
@@ -206,8 +232,8 @@ function toPurchaseUnitAmount(amount, recipeUnit, priceRow) {
   const pu = priceRow.unit;
   if (ru === pu) return amount;
   if (ru === '' && pu === 'stk') return amount; // tomt enhedsfelt = stk (tælleligt), fx "Løg","1",""
-  const yieldPerPack = UNIT_YIELD[ru];
-  if (yieldPerPack) return amount / yieldPerPack;
+  const factor = purchaseUnitsPerRecipeUnit(ru, priceRow);
+  if (factor) return amount * factor;
   return null;
 }
 
@@ -267,8 +293,8 @@ function computeItemPurchase(amountRaw, recipeUnit, priceRow, opts) {
   const totalCost = packsNeeded * packPrice;
   const surplus = Math.max(0, purchasedAmount - neededInPurchaseUnit);
   const wastePercent = purchasedAmount > 0 ? (surplus / purchasedAmount) * 100 : 0;
-  const yieldPerPack = UNIT_YIELD[(recipeUnit || '').toLowerCase()];
-  const surplusInRecipeUnit = yieldPerPack ? surplus * yieldPerPack : (recipeUnit === priceRow.unit ? surplus : null);
+  const factor = purchaseUnitsPerRecipeUnit(recipeUnit, priceRow);
+  const surplusInRecipeUnit = factor ? surplus / factor : (recipeUnit === priceRow.unit ? surplus : null);
 
   return {
     purchasedAmount, packsNeeded, totalCost, surplus, surplusInRecipeUnit, wastePercent,
@@ -390,8 +416,8 @@ function generateShoppingList(recipeIngredients, options) {
         if (purchasedAmount < priceRow.minPurchase) purchasedAmount = priceRow.minPurchase;
         const surplus = Math.max(0, purchasedAmount - entry.totalPurchaseUnits);
         const wastePercent = purchasedAmount > 0 ? (surplus / purchasedAmount) * 100 : 0;
-        const yieldPerPack = UNIT_YIELD[(entry.recipeUnit || '').toLowerCase()];
-        const surplusInRecipeUnit = yieldPerPack ? surplus * yieldPerPack : (entry.recipeUnit === priceRow.unit ? surplus : null);
+        const factor = purchaseUnitsPerRecipeUnit(entry.recipeUnit, priceRow);
+        const surplusInRecipeUnit = factor ? surplus / factor : (entry.recipeUnit === priceRow.unit ? surplus : null);
         purchase = {
           purchasedAmount, packsNeeded, totalCost: packsNeeded * packPrice, surplus, surplusInRecipeUnit,
           wastePercent, purchaseUnit: priceRow.unit, category: priceRow.category, neededInPurchaseUnit: entry.totalPurchaseUnits,
